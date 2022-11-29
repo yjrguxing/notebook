@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.psyduck.notebook.content.mapper.MenuCategroyMapper">
+    
+    <resultMap type="MenuCategroy" id="MenuCategroyResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="type"    column="type"    />
+        <result property="fatherId"    column="father_id"    />
+        <result property="logo"    column="logo"    />
+        <result property="createdBy"    column="CREATED_BY"    />
+        <result property="createdTime"    column="CREATED_TIME"    />
+        <result property="updatedBy"    column="UPDATED_BY"    />
+        <result property="updatedTime"    column="UPDATED_TIME"    />
+        <result property="deleteBy"    column="DELETE_BY"    />
+        <result property="deleteTime"    column="DELETE_TIME"    />
+        <result property="deleteFlag"    column="DELETE_FLAG"    />
+    </resultMap>
+
+    <sql id="selectMenuCategroyVo">
+        select id, name, type, father_id, logo, CREATED_BY, CREATED_TIME, UPDATED_BY, UPDATED_TIME, DELETE_BY, DELETE_TIME, DELETE_FLAG from menu_categroy
+    </sql>
+
+    <select id="selectMenuCategroyList" parameterType="MenuCategroy" resultMap="MenuCategroyResult">
+        <include refid="selectMenuCategroyVo"/>
+        <where>  
+            <if test="id != null  and id != ''"> and id = #{id}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="type != null "> and type = #{type}</if>
+            <if test="fatherId != null "> and father_id = #{fatherId}</if>
+            <if test="createdBy != null  and createdBy != ''"> and CREATED_BY = #{createdBy}</if>
+            <if test="params.beginCreatedTime != null and params.beginCreatedTime != '' and params.endCreatedTime != null and params.endCreatedTime != ''"> and CREATED_TIME between #{params.beginCreatedTime} and #{params.endCreatedTime}</if>
+            <if test="updatedBy != null  and updatedBy != ''"> and UPDATED_BY = #{updatedBy}</if>
+            <if test="params.beginUpdatedTime != null and params.beginUpdatedTime != '' and params.endUpdatedTime != null and params.endUpdatedTime != ''"> and UPDATED_TIME between #{params.beginUpdatedTime} and #{params.endUpdatedTime}</if>
+            <if test="deleteBy != null  and deleteBy != ''"> and DELETE_BY = #{deleteBy}</if>
+            <if test="params.beginDeleteTime != null and params.beginDeleteTime != '' and params.endDeleteTime != null and params.endDeleteTime != ''"> and DELETE_TIME between #{params.beginDeleteTime} and #{params.endDeleteTime}</if>
+            <if test="deleteFlag != null "> and DELETE_FLAG = #{deleteFlag}</if>
+        </where>
+    </select>
+    
+    <select id="selectMenuCategroyById" parameterType="String" resultMap="MenuCategroyResult">
+        <include refid="selectMenuCategroyVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertMenuCategroy" parameterType="MenuCategroy" useGeneratedKeys="true" keyProperty="id">
+        insert into menu_categroy
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="type != null">type,</if>
+            <if test="fatherId != null">father_id,</if>
+            <if test="logo != null">logo,</if>
+            <if test="createdBy != null">CREATED_BY,</if>
+            <if test="createdTime != null">CREATED_TIME,</if>
+            <if test="updatedBy != null">UPDATED_BY,</if>
+            <if test="updatedTime != null">UPDATED_TIME,</if>
+            <if test="deleteBy != null">DELETE_BY,</if>
+            <if test="deleteTime != null">DELETE_TIME,</if>
+            <if test="deleteFlag != null">DELETE_FLAG,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="type != null">#{type},</if>
+            <if test="fatherId != null">#{fatherId},</if>
+            <if test="logo != null">#{logo},</if>
+            <if test="createdBy != null">#{createdBy},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedBy != null">#{updatedBy},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+            <if test="deleteBy != null">#{deleteBy},</if>
+            <if test="deleteTime != null">#{deleteTime},</if>
+            <if test="deleteFlag != null">#{deleteFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateMenuCategroy" parameterType="MenuCategroy">
+        update menu_categroy
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="fatherId != null">father_id = #{fatherId},</if>
+            <if test="logo != null">logo = #{logo},</if>
+            <if test="createdBy != null">CREATED_BY = #{createdBy},</if>
+            <if test="createdTime != null">CREATED_TIME = #{createdTime},</if>
+            <if test="updatedBy != null">UPDATED_BY = #{updatedBy},</if>
+            <if test="updatedTime != null">UPDATED_TIME = #{updatedTime},</if>
+            <if test="deleteBy != null">DELETE_BY = #{deleteBy},</if>
+            <if test="deleteTime != null">DELETE_TIME = #{deleteTime},</if>
+            <if test="deleteFlag != null">DELETE_FLAG = #{deleteFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+    <update id="recoverMenuCategroyById" parameterType="string">
+        update menu_categroy
+        <set>
+            DELETE_FLAG = 0
+        </set>
+        where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteMenuCategroyById" parameterType="String">
+        update menu_categroy
+        set DELETE_FLAG = 1
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteMenuCategroyByIds" parameterType="String">
+        update menu_categroy
+        set DELETE_FLAG = 1
+        where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -186,6 +186,12 @@
                 <version>${notebook.version}</version>
             </dependency>
 
+            <!-- 笔记本内容-->
+            <dependency>
+                <groupId>com.psyduck.notebook</groupId>
+                <artifactId>notebook-content</artifactId>
+                <version>${notebook.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -196,6 +202,7 @@
         <module>notebook-quartz</module>
         <module>notebook-generator</module>
         <module>notebook-common</module>
+        <module>notebook-content</module>
     </modules>
     <packaging>pom</packaging>
 

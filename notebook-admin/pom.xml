@@ -61,6 +61,11 @@
             <artifactId>notebook-generator</artifactId>
         </dependency>
 
+        <!-- 笔记本内容-->
+        <dependency>
+            <groupId>com.psyduck.notebook</groupId>
+            <artifactId>notebook-content</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
