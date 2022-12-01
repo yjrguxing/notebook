@@ -86,6 +86,7 @@
         <el-radio-group v-model="queryParams.deleteFlag">
           <el-radio-button label="0">否</el-radio-button>
           <el-radio-button label="1">是</el-radio-button>
+          <el-radio-button label="">全部</el-radio-button>
         </el-radio-group>
       </el-form-item>
       <el-form-item>
@@ -127,6 +128,18 @@
           v-hasPermi="['menu:categroy:remove']"
         >禁用</el-button>
       </el-col>
+      <!--恢复-->
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-refresh"
+          size="mini"
+          :disabled="multiple"
+          @click="handleRecovery"
+          v-hasPermi="['menu:categroy:recovery']"
+        >恢复</el-button>
+      </el-col>
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -140,12 +153,12 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="categroyList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="categroyList" @selection-change="handleSelectionChange" default-sort="分类层级">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="id" align="center" prop="id" />
+      <el-table-column label="id" align="center" prop="id" sortable />
+      <el-table-column label="分类层级" align="center" prop="type" sortable />
       <el-table-column label="分类名称" align="center" prop="name" />
-      <el-table-column label="分类层级" align="center" prop="type" />
-      <el-table-column label="父分类ID" align="center" prop="fatherId" />
+      <el-table-column label="父分类ID" align="center" prop="fatherId" sortable />
       <el-table-column label="logo" align="center" prop="logo" width="100">
         <template slot-scope="scope">
           <image-preview :src="scope.row.logo" :width="50" :height="50"/>
@@ -169,7 +182,7 @@
           <span>{{ parseTime(scope.row.deleteTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="是否已禁用" align="center" prop="deleteFlag" >
+      <el-table-column label="是否已禁用" align="center" prop="deleteFlag" sortable >
         <template slot-scope="scope">
           <el-tag v-if="scope.row.deleteFlag === 0" type="success">否</el-tag>
           <el-tag v-else type="danger">是</el-tag>
@@ -220,19 +233,16 @@
         </el-form-item>
         <!--选择父级分类-->
         <el-form-item label="父级分类" prop="fatherId">
-          <el-select v-model="form.fatherId" placeholder="请选择父级分类">
-            <!--顶级分类-->
-            <el-option label="顶级分类" :value="0"></el-option>
-            <el-option
-              v-for="item in categroyList"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="分类层级" prop="type">
-          <el-input v-model="form.type" placeholder="请输入分类层级" />
+          <el-tree
+            :data="categroyTree"
+            :props="categroyProps"
+            node-key="id"
+            ref="tree"
+            check-strictly = "check-strictly"
+            show-checkbox
+            accordion
+            @check-change="checkChangeClick"
+          />
         </el-form-item>
         <el-form-item label="logo">
           <image-upload :limit="1" v-model="form.logo"/>
@@ -248,6 +258,7 @@
 
 <script>
 import { listCategroy, getCategroy, delCategroy, addCategroy, updateCategroy, recoverCategroy } from "@/api/menu/categroy";
+import { arrayToTree } from "@/utils/psyduckutils/tree";
 
 export default {
   name: "Categroy",
@@ -291,7 +302,7 @@ export default {
         updatedTime: null,
         deleteBy: null,
         deleteTime: null,
-        deleteFlag: null
+        deleteFlag: ""
       },
       // 表单参数
       form: {},
@@ -300,20 +311,24 @@ export default {
         name: [
           { required: true, message: "分类名称不能为空", trigger: "blur" }
         ],
-        type: [
-          { required: true, message: "分类层级不能为空", trigger: "blur" }
-        ],
-        fatherId: [
-          { required: true, message: "父级分类不能为空", trigger: "change" }
-        ],
-        deleteFlag: [
-          { required: true, message: "是否已禁用不能为空", trigger: "blur" }
-        ]
+      },
+      // 多级菜单树形控件配置
+      categroyProps: {
+        children: "children",
+        label: "name"
       }
     };
   },
   created() {
     this.getList();
+  },
+  computed: {
+    // 多级菜单表格数据转树形结构
+    categroyTree() {
+      let categroyTree = arrayToTree(this.categroyList, "id", "fatherId");
+      console.log(categroyTree);
+      return categroyTree;
+    }
   },
   methods: {
     /** 查询多级菜单列表 */
@@ -357,7 +372,7 @@ export default {
         updatedTime: null,
         deleteBy: null,
         deleteTime: null,
-        deleteFlag: null
+        deleteFlag: ""
       };
       this.resetForm("form");
     },
@@ -448,8 +463,20 @@ export default {
       }, `categroy_${new Date().getTime()}.xlsx`)
     },
     formFormatter(formData) {
-      if(formData?.type == 1){
+      if(!this.form.fatherId){
         this.form.fatherId = 0;
+        this.form.type = 1;
+      }
+    },
+    checkChangeClick(data, isClick, childClick) {
+      if(isClick){
+        this.form.fatherId = data.id;
+        this.form.type = data.type + 1;
+        this.$refs.tree.setCheckedKeys([data.id]);
+      }else{
+        this.form.fatherId = 0;
+        this.form.type = 1;
+        this.$refs.tree.setCheckedKeys([]);
       }
     }
   }
